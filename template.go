@@ -3,6 +3,7 @@ package gendoc
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -558,12 +559,18 @@ func parseType(tc typeContainer) (string, string, string) {
 	return name, name, name
 }
 
+var linterRulePattern *regexp.Regexp
+
 func description(comment string) string {
-	val := strings.TrimLeft(comment, "*/\n ")
+	val := strings.ReplaceAll(comment, "\n", " ")
+	if linterRulePattern == nil {
+		linterRulePattern = regexp.MustCompile(`\(-- .* --\)`)
+	}
+	val = linterRulePattern.ReplaceAllLiteralString(val, "")
+	val = strings.TrimLeft(val, "*/\n ")
 	if strings.HasPrefix(val, "@exclude") {
 		return ""
 	}
-
 	return val
 }
 
